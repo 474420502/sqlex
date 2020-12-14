@@ -1,0 +1,5 @@
+module github.com/474420502/sqlex
+
+go 1.15
+
+require github.com/go-sql-driver/mysql v1.5.0
