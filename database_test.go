@@ -1,10 +1,10 @@
 package sqlex
 
 import (
-	"log"
 	"testing"
 )
 
 func Test(t *testing.T) {
-	log.Println(12)
+	s := "insert into ?t<name>[1](a,b,name,field) value(?v)"
+	check(&s)
 }

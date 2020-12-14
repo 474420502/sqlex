@@ -53,18 +53,51 @@ type table struct {
 	columns []string
 }
 
+type values struct {
+}
+
 func getField(query []rune, end rune, i *int) string {
 	var field []rune
+	*i++ // ( +1 => content
 	for ; *i < len(query)-1; *i++ {
 		c := query[*i]
 		if c == ' ' {
 			continue
 		}
-		if c != end {
-			field = append(field, c)
+		if c == end {
+			*i++ // ) => next
+			break
 		}
+		field = append(field, c)
 	}
 	return string(field)
+}
+
+func getTable(query []rune, i *int) *table {
+	*i += 2 // => ()[]<>
+	tb := &table{}
+EXTRACTOR_TABLE:
+	for {
+
+		switch cquto := query[*i]; cquto {
+		case '<':
+			tb.name = getField(query, '>', i)
+		case '(':
+			columnsStr := getField(query, ')', i)
+			tb.columns = strings.Split(columnsStr, ",")
+		case '[':
+			index, err := strconv.Atoi(getField(query, ']', i))
+			if err != nil {
+				panic(err)
+			}
+			tb.index = index
+		default:
+			break EXTRACTOR_TABLE
+		}
+
+	}
+
+	return tb
 }
 
 func check(q *string) string {
@@ -77,23 +110,12 @@ func check(q *string) string {
 			i++
 			continue
 		case '?':
-			if query[i+1] == 't' {
-				i += 2
-				tb := &table{}
-				switch cquto := query[i]; cquto {
-				case '<':
-					tb.name = getField(query, '>', &i)
-				case '(':
-					columnsStr := getField(query, ')', &i)
-					tb.columns = strings.Split(columnsStr, ",")
-				case '[':
-					index, err := strconv.Atoi(getField(query, ']', &i))
-					if err != nil {
-						panic(err)
-					}
-					tb.index = index
-				}
-				tables = append(tables, tb)
+			inputType := query[i+1]
+			switch inputType {
+			case 't': // 提取表结构
+				tables = append(tables, getTable(query, &i))
+			case 'v': // 提取值结构
+
 			}
 		}
 
